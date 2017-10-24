@@ -39,7 +39,7 @@ const domString = (movieArray, imgConfig, divName) => {
 	    domString +=	  `<img src="${imgConfig.base_url}/w342/${movieArray[i].poster_path}"
  alt="">`;
 	    domString +=  `<div class="caption">`;
-	    domString +=    `<h3>${movieArray[i].original_title}</h3>`;
+	    domString +=    `<h3>${movieArray[i].title}</h3>`;
 	    domString +=    `<p>${movieArray[i].overview}</p>`;
 	    domString +=    `<p><a href="#" class="btn btn-primary" role="button">Review</a> <a href="#" class="btn btn-default" role="button">Watchlist</a></p>`;
 	    domString +=  		`</div>`;
@@ -67,6 +67,7 @@ module.exports = {domString, clearDom};
 "use strict";
 
 const tmdb = require('./tmdb');
+const dom = require('./dom');
 const firebaseApi = require('./firebaseApi');
 
 const pressEnter = () => {
@@ -90,6 +91,12 @@ const myLinks = () => {
 			$("#search").addClass("hide");
 			$("#myMovies").removeClass("hide");
 			$("#authScreen").addClass("hide");
+			firebaseApi.getMovieList().then((results) =>{
+				dom.clearDom('moviesMine');
+				dom.domString(results, tmdb.getImgConfig(), 'moviesMine');
+			}).catch((err) =>{
+				console.log("error in getMovieList", err);
+			});
 		}else if (e.target.id === "authenticate"){
 			$("#search").addClass("hide");
 			$("#myMovies").addClass("hide");
@@ -99,10 +106,8 @@ const myLinks = () => {
 };
 
 const googleAuth = () => {
-	$("#googleButton").click((e) => {
-		firebaseApi.authenticateGoogle().then ((result) => {
-			console.log("result", result);
-		}).catch((err) => {
+	$('#googleButton').click((e) =>{
+		firebaseApi.authenticateGoogle().then().catch((err) =>{
 			console.log("error in authenticateGoogle", err);
 		});
 	});
@@ -113,7 +118,8 @@ const googleAuth = () => {
 
 
 module.exports = {pressEnter, myLinks, googleAuth};
-},{"./firebaseApi":4,"./tmdb":6}],4:[function(require,module,exports){
+},{"./dom":2,"./firebaseApi":4,"./tmdb":6}],4:[function(require,module,exports){
+
 "use strict";
 
 let firebaseKey = "";
@@ -125,20 +131,39 @@ const setKey = (key) =>{
 
 //Firebase: GOOGLE - Use input credentials to authenticate user.
 let authenticateGoogle = () => {
-return new Promise((resolve, reject) => {
-  var provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-    .then((authData) => {
-    	userUid = authData.user.uid;
-        resolve(authData.user);
-    }).catch((error) => {
-        reject(error);
-    });
-});
+	return new Promise((resolve, reject) => {
+	  var provider = new firebase.auth.GoogleAuthProvider();
+	  firebase.auth().signInWithPopup(provider)
+	    .then((authData) => {
+	    	userUid = authData.user.uid;
+	        resolve(authData.user);
+	    }).catch((error) => {
+	        reject(error);
+	    });
+	});
+};
+
+const getMovieList = () => {
+	let movies = [];
+	return new Promise((resolve, reject) =>{
+		$.ajax(`${firebaseKey.databaseURL}/movies.json?orderBy="uid"&equalTo="${userUid}"`).then((fbMovies) =>{
+			if(fbMovies != null){
+				Object.keys(fbMovies).forEach((key) =>{
+					fbMovies[key].id = key;
+					movies.push(fbMovies[key]);
+				});
+			}
+
+			resolve(movies);
+		}).catch((err) =>{
+			reject(err);
+		});
+	});
 };
 
 
-module.exports = {setKey, authenticateGoogle};
+
+module.exports = {setKey, authenticateGoogle, getMovieList};
 },{}],5:[function(require,module,exports){
 "use strict";
 
@@ -158,60 +183,68 @@ events.pressEnter();
 
 let tmdbKey;
 let imgConfig;
-
 const dom = require('./dom');
 
-
 const searchTMDB = (query) => {
-	return new Promise((resolve, reject) => {
-		$.ajax(`https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&language=en-US&page=1&include_adult=false&query=${query}`).done((data) => {
-			resolve(data.results);
-			console.log(data);
-		}).fail((error) => {
-			reject(error);
-		});
-	});
+  return new Promise((resolve, reject) => {
+    $.ajax(`https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&language=en-US&page=1&include_adult=false&query=${query}`).done((data) => {
+      resolve(data.results);
+    }).fail((error) => {
+      reject(error);
+    });
+  });
 };
 
-const tmdbConfiruguration = () => {
-	return new Promise((resolve, reject) => {
-		$.ajax(`https://api.themoviedb.org/3/configuration?api_key=${tmdbKey}`).done((data) => {
-			resolve(data.images);
-		}).fail((error) => {
-			reject(error);
-		});
-	});
+const tmdbConfiguration = () => {
+  return new Promise((resolve, reject) => {
+    $.ajax(`https://api.themoviedb.org/3/configuration?api_key=${tmdbKey}`).done((data) => {
+      resolve(data.images);
+    }).fail((error) => {
+      reject(error);
+    });
+  });
 };
 
 const getConfig = () => {
-	tmdbConfiruguration().then((results) => {
-		imgConfig = results;
-		console.log(imgConfig);
-	}).catch((error) => {
-		console.log("error in getConfig", error);
-	});
+  tmdbConfiguration().then((results) => {
+    imgConfig = results;
+  }).catch((error) => {
+    console.log("Error in getConfig", error);
+  });
 };
 
 const searchMovies = (query) => {
-	searchTMDB(query).then ((data) => {
-		showResults(data);
-	}).catch((error) => {
-		console.log("error in search Movies", error);
-	});
+  searchTMDB(query).then((data) => {
+    showResults(data);
+  }).catch((error) => {
+    console.log("error in search Movies", error);
+  });
 };
 
 const setKey = (apiKey) => {
-	tmdbKey = apiKey;
-	getConfig();
+  tmdbKey = apiKey;
+  getConfig();
 };
 
 const showResults = (movieArray) => {
-	dom.clearDom('movies');
- 	dom.domString(movieArray, imgConfig, 'movies');
+  dom.clearDom('movies');
+  dom.domString(movieArray, imgConfig, 'movies');
 };
 
+const getImgConfig = () => {
+  return imgConfig;
+};
+
+module.exports = {setKey, searchMovies, getImgConfig};
 
 
 
-module.exports = {setKey, searchMovies};
+
+
+
+
+
+
+
+
 },{"./dom":2}]},{},[5]);
