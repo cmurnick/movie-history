@@ -2,6 +2,7 @@
 "use strict";
 
 const tmdb = require('./tmdb');
+const firebaseApi = require('./firebaseApi');
 
 const apiKeys = () => {
 	return new Promise((resolve, reject) => {
@@ -16,13 +17,15 @@ const apiKeys = () => {
 const retrieveKeys = () => {
 	apiKeys().then((results) => {
 		tmdb.setKey(results.tmdb.apiKey);
+		firebaseApi.setKey(results.firebaseKeys);
+ 		firebase.initializeApp(results.firebaseKeys);
 	}).catch((error) => {
 		console.log('error in retrieve keys', error);
 	});
 };
 
 module.exports = {retrieveKeys};
-},{"./tmdb":5}],2:[function(require,module,exports){
+},{"./firebaseApi":4,"./tmdb":6}],2:[function(require,module,exports){
 "use strict";
 const domString = (movieArray, imgConfig) => {
 	let domString = '';
@@ -66,18 +69,47 @@ module.exports = {domString, clearDom};
 const tmdb = require('./tmdb');
 
 const pressEnter = () => {
-	$(document).keypress((e) => {
-		if (e.key === 'Enter'){
-			let searchText = $('#searchBar').val();
-			let query = searchText.replace(/\s/g, "%20");
-			tmdb.searchMovies(query);
-		}
+  $(document).keypress((e) => {
+    if (e.key === 'Enter'){
+      let searchText = $('#searchBar').val();
+      let query = searchText.replace(/\s/g, "%20");
+      tmdb.searchMovies(query);
+    }
+  });
 
+};
+
+const myLinks = () => {
+	$(document).click((e) =>{
+		if(e.target.id === "navSearch"){
+			$("#search").removeClass("hide");
+			$("#myMovies").addClass("hide");
+			$("#authScreen").addClass("hide");
+		}else if (e.target.id === "mine") {
+			$("#search").addClass("hide");
+			$("#myMovies").removeClass("hide");
+			$("#authScreen").addClass("hide");
+		}else if (e.target.id === "authenticate"){
+			$("#search").addClass("hide");
+			$("#myMovies").addClass("hide");
+			$("#authScreen").removeClass("hide");
+		}
 	});
 };
 
-module.exports = {pressEnter};
-},{"./tmdb":5}],4:[function(require,module,exports){
+module.exports = {pressEnter, myLinks};
+},{"./tmdb":6}],4:[function(require,module,exports){
+"use strict";
+
+let firebaseKey = "";
+
+
+const setKey = (key) =>{
+	firebaseKey = key;
+};
+
+module.exports = {setKey};
+},{}],5:[function(require,module,exports){
 "use strict";
 
 let dom = require('./dom');
@@ -88,7 +120,9 @@ let apiKeys = require('./apiKeys');
 apiKeys.retrieveKeys();
 
 events.pressEnter();
-},{"./apiKeys":1,"./dom":2,"./events":3}],5:[function(require,module,exports){
+events.myLinks();
+
+},{"./apiKeys":1,"./dom":2,"./events":3}],6:[function(require,module,exports){
 "use strict";
 
 let tmdbKey;
@@ -149,4 +183,4 @@ const showResults = (movieArray) => {
 
 
 module.exports = {setKey, searchMovies};
-},{"./dom":2}]},{},[4]);
+},{"./dom":2}]},{},[5]);
