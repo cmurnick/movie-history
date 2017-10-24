@@ -1,5 +1,5 @@
 "use strict";
-const domString = (movieArray, imgConfig) => {
+const domString = (movieArray, imgConfig, divName) => {
 	let domString = '';
 	for(let i =0; i < movieArray.length; i++) {
 		if (i % 3 === 0){
@@ -22,15 +22,15 @@ const domString = (movieArray, imgConfig) => {
 		}
 	}
 
-		printToDom(domString);
+		printToDom(domString, divName);
 };
 
-const printToDom = (strang) => {
-	$("#movies").append(strang);
+const printToDom = (strang, divName) => {
+	$(`#${divName}`).append(strang);
 };
 
-const clearDom = () => {
-	$('#movies').empty();
+const clearDom = (divName) => {
+	$(`#${divName}`).empty();
 };
 
 

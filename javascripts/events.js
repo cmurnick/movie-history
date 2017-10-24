@@ -24,6 +24,11 @@ const myLinks = () => {
 			$("#search").addClass("hide");
 			$("#myMovies").removeClass("hide");
 			$("#authScreen").addClass("hide");
+			firebaseApi.getMovieList().then(() => {
+				console.log("results", results);
+			}).catch((error) => {
+				reject(error);
+			});
 		}else if (e.target.id === "authenticate"){
 			$("#search").addClass("hide");
 			$("#myMovies").addClass("hide");
