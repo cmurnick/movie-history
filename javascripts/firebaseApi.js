@@ -40,6 +40,26 @@ const getMovieList = () => {
 	});
 };
 
+const saveMovie = (movie) => {
+	movie.uid = userUid;
+	console.log("movie", movie);
+	return new Promise((resolve, reject) => {
+		$.ajax({
+			method: "POST",
+			url: `${firebaseKey.databaseURL}/movies.json`,
+			data: JSON.stringify(movie)
+		}).then((result) => {
+			resolve(result);
+		}).catch((error) => {
+			reject(error);
+		});
+
+	});
+};
 
 
-module.exports = {setKey, authenticateGoogle, getMovieList};
+module.exports = {setKey, authenticateGoogle, getMovieList, saveMovie};
+
+
+
+
