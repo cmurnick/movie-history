@@ -24,7 +24,9 @@ const domString = (movieArray, imgConfig, divName, search) => {
 	    domString += 		`<a class="btn btn-primary review" role="button">Review</a>`;
 	    domString += 		`<a class="btn btn-default wishlist" role="button">Wishlist</a></p>`;
 	} else { 
-		domString +=`<p>Rating: ${movieArray[i].rating}</p>`;
+		// domString +=`<p>Rating: ${movieArray[i].rating}</p>`;
+		domString += `<label for="stars_ ${movieArray[i].id}" class="control-label"> Rate This</label>`;
+		domString += `<input id="stars_${movieArray[i].id}" name="stars_${movieArray[i].id}" class= "stars rating-loading">`;
 	}
 
 	    domString +=  		`</div>`;
@@ -34,12 +36,25 @@ const domString = (movieArray, imgConfig, divName, search) => {
 		domString += `</div>`;
 		}
 	}
-
+	if(!search) {
+		pringToDom(domString, divName, movieArray);
+	} else {
 		printToDom(domString, divName);
+	}
+	}
 };
 
+
+const initialize Stars = (starsArray) => {
+	starArray.forEach ((star) => {
+		$("#stars_" + star.id.(rating))
+	})
+}
 const printToDom = (strang, divName) => {
 	$(`#${divName}`).append(strang);
+	if(starArray) {
+		initializeStars(starArray);
+	}
 };
 
 const clearDom = (divName) => {

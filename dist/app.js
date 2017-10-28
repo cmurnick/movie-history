@@ -52,7 +52,9 @@ const domString = (movieArray, imgConfig, divName, search) => {
 	    domString += 		`<a class="btn btn-primary review" role="button">Review</a>`;
 	    domString += 		`<a class="btn btn-default wishlist" role="button">Wishlist</a></p>`;
 	} else { 
-		domString +=`<p>Rating: ${movieArray[i].rating}</p>`;
+		// domString +=`<p>Rating: ${movieArray[i].rating}</p>`;
+		domString += `<label for="stars_ ${movieArray[i].id}" class="control-label"> Rate This</label>`;
+		domString += `<input id="stars_${movieArray[i].id}" name="stars_${movieArray[i].id}" class= "stars_rating-loading">`;
 	}
 
 	    domString +=  		`</div>`;
